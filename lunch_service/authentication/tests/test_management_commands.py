@@ -10,6 +10,7 @@ from lunch_service.authentication.models import User, UserRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.django_db]
 
+
 def test_create_company_admin_command_success() -> None:
     # Mock inputs for username, email, and password
     inputs: Iterator[str] = iter(['testuser', 'testuser@example.com', 'password123'])

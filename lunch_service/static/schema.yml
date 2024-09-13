@@ -96,7 +96,7 @@ paths:
         - Votes via the new API version create or update a vote record with points for the top three choices for the day.
       operationId: employee_vote_create
       parameters:
-      - name: API-Version
+      - name: X-API-Version
         in: header
         description: Version of the API to use
         schema:

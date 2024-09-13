@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic import TemplateView, RedirectView
+from django.views.generic import RedirectView, TemplateView
 
 api_urlpatterns = [
     path('auth/', include('lunch_service.authentication.urls')),
@@ -31,7 +31,7 @@ urlpatterns = [
     path('swagger-ui/', TemplateView.as_view(
         template_name='swagger-ui.html',
     ), name='swagger-ui'),
-    
+
     path('api/', include(api_urlpatterns)),
     path('', RedirectView.as_view(url="/swagger-ui/", permanent=True))
 ]
