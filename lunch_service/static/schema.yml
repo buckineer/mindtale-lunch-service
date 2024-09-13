@@ -1,0 +1,308 @@
+openapi: 3.0.1
+info:
+  title: Lunch Service API
+  contact:
+    email: whitneyaddison269@gmail.com
+  version: "1.0"
+servers:
+- url: http://127.0.0.1:8000/api
+paths:
+  /auth/login/:
+    post:
+      tags:
+      - auth
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      operationId: auth_login_create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+      
+  /auth/refresh/:
+    post:
+      tags:
+      - auth
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      operationId: auth_refresh_create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+      
+  /company/top_voted_menu/:
+    get:
+      tags:
+      - company
+      operationId: company_top_voted_menu_list
+      responses:
+        "200":
+          description: ""
+          content: {}
+  /employee/:
+    post:
+      tags:
+      - employee
+      description: |-
+        API view for creating a new employee.
+        Access is restricted to users with company admin permissions.
+      operationId: employee_create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Employee'
+        required: true
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+      security:
+      - jwtAuth: []
+      
+  /employee/vote/:
+    post:
+      tags:
+      - employee
+      description: |-
+        This API endpoint is designed for submitting votes and is accessible exclusively to users who have employee permissions.
+        It incorporates versioning to select the appropriate serializer based on the version specified. When making requests, please include the desired version (for example, "1.0") in the X-API-VERSION header. 
+        The supported versions are \"1.0\" and \"2.0\". If a version is not specified, the default version set is '1.0'.
+        - Votes via the old API version create or update a vote record with the top points for the day.
+        - Votes via the new API version create or update a vote record with points for the top three choices for the day.
+      operationId: employee_vote_create
+      parameters:
+      - name: API-Version
+        in: header
+        description: Version of the API to use
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/VoteOne'
+                - $ref: '#/components/schemas/VoteThree'
+        required: true
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/VoteOne'
+                  - $ref: '#/components/schemas/VoteOne'
+      security:
+      - jwtAuth: []
+      
+  /restaurant/:
+    post:
+      tags:
+      - restaurant
+      description: |-
+        API view for creating a restaurant.
+        Access is restricted to users with company admin permissions.
+      operationId: restaurant_create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Restaurant'
+        required: true
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Restaurant'
+      security:
+      - jwtAuth: []
+      
+  /restaurant/menu/:
+    post:
+      tags:
+      - restaurant
+      operationId: restaurant_menu_create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Menu'
+        required: true
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+      security:
+      - apiKeyAuth: []
+      
+components:
+  schemas:
+    TokenObtainPair:
+      required:
+      - password
+      - username
+      type: object
+      properties:
+        username:
+          title: Username
+          minLength: 1
+          type: string
+        password:
+          title: Password
+          minLength: 1
+          type: string
+    TokenRefresh:
+      required:
+      - refresh
+      type: object
+      properties:
+        refresh:
+          title: Refresh
+          minLength: 1
+          type: string
+        access:
+          title: Access
+          minLength: 1
+          type: string
+          readOnly: true
+    Employee:
+      required:
+      - password
+      - retype_password
+      - username
+      type: object
+      properties:
+        username:
+          title: Username
+          maxLength: 150
+          minLength: 1
+          pattern: "^[\\w.@+-]+$"
+          type: string
+          description: "Required. 150 characters or fewer. Letters, digits and @/./+/-/_\
+            \ only."
+        password:
+          title: Password
+          minLength: 1
+          type: string
+        retype_password:
+          title: Retype password
+          minLength: 1
+          type: string
+        email:
+          title: Email address
+          maxLength: 254
+          type: string
+          format: email
+        first_name:
+          title: First name
+          maxLength: 150
+          type: string
+        last_name:
+          title: Last name
+          maxLength: 150
+          type: string
+    VoteOne:
+      required:
+      - menu
+      type: object
+      properties:
+        menu:
+          title: Menu
+          type: integer
+    VoteThree:
+      required:
+      - menus
+      type: object
+      properties:
+        menus:
+          maxItems: 3
+          minItems: 1
+          type: array
+          items:
+            title: Menu
+            type: integer
+    Restaurant:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          title: ID
+          type: integer
+          readOnly: true
+        name:
+          title: Name
+          maxLength: 255
+          minLength: 1
+          type: string
+        api_key:
+          title: Api key
+          minLength: 1
+          type: string
+          readOnly: true
+    Menu:
+      required:
+      - date
+      - items
+      type: object
+      properties:
+        id:
+          title: ID
+          type: integer
+          readOnly: true
+        date:
+          title: Date
+          type: string
+          format: date
+        items:
+          title: ItemsoneOf
+          minLength: 1
+          type: string
+        restaurant:
+          title: Restaurant
+          type: integer
+          readOnly: true
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      description: "API Key Authentication. Example: API-KEY: {your_api_key}"
+      name: API-KEY
+      in: header
+    jwtAuth:
+      type: apiKey
+      description: "JWT Authentication with Bearer scheme. Example: \"Authorization:\
+        \ Bearer {access_token}\""
+      name: Authorization
+      in: header
+
